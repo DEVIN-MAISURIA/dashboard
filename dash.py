@@ -2,91 +2,117 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 
-# -------------------- PAGE CONFIG --------------------
-st.set_page_config(page_title="AI CSV Dashboard", layout="wide")
+# -------------------- CONFIG --------------------
+st.set_page_config(page_title="LLM Data Analyzer", layout="wide")
 
-st.title("🤖 AI-Powered CSV Dashboard")
+st.title("🤖 Intelligent CSV Analyzer (LLM Style)")
 
-# -------------------- MODE SELECTION --------------------
-mode = st.sidebar.radio("Select Mode", ["📊 Dashboard", "🧠 AI Insights"])
-
-# -------------------- FILE UPLOAD --------------------
-file = st.file_uploader("Upload your CSV file", type=["csv"])
+# -------------------- INPUT --------------------
+file = st.file_uploader("Upload CSV File", type=["csv"])
 
 if file is not None:
     df = pd.read_csv(file)
 
-    st.success("File uploaded successfully!")
+    st.success("✅ File Uploaded Successfully")
 
-    # -------------------- DASHBOARD MODE --------------------
-    if mode == "📊 Dashboard":
+    # -------------------- INPUT TYPE --------------------
+    st.subheader("📥 Input Type")
+    st.write("Structured CSV Data")
 
-        st.subheader("📄 Data Preview")
-        st.dataframe(df, use_container_width=True)
+    # -------------------- PROCESSING --------------------
+    st.subheader("⚙️ Data Processing")
+    st.write("• Handling numeric columns")
+    st.write("• Statistical computation")
+    st.write("• Pattern detection")
 
-        st.subheader("📊 Summary Statistics")
-        st.write(df.describe())
+    numeric_cols = df.select_dtypes(include=np.number).columns.tolist()
 
-        numeric_cols = df.select_dtypes(include=np.number).columns.tolist()
+    if numeric_cols:
 
-        if numeric_cols:
-            col = st.selectbox("Select column", numeric_cols)
+        # -------------------- OUTPUT TYPE --------------------
+        st.subheader("📤 Output Type")
+        st.write("Interactive Dashboard + AI Insights")
 
-            col1, col2, col3 = st.columns(3)
-            col1.metric("Mean", round(df[col].mean(), 2))
-            col2.metric("Max", df[col].max())
-            col3.metric("Min", df[col].min())
+        # -------------------- GRAPH SELECTION --------------------
+        st.subheader("📊 Graph Selection Logic")
 
-            st.subheader("📈 Chart")
+        col = st.selectbox("Select column for analysis", numeric_cols)
+
+        unique_vals = df[col].nunique()
+
+        if unique_vals < 10:
+            graph_type = "Bar Chart"
+            st.bar_chart(df[col])
+        else:
+            graph_type = "Line Chart"
             st.line_chart(df[col])
 
+        st.write(f"✅ Selected Graph: **{graph_type}** (based on data distribution)")
+
+        # -------------------- STATISTICS --------------------
+        st.subheader("📈 Statistical Analysis")
+
+        mean = df[col].mean()
+        median = df[col].median()
+        std = df[col].std()
+
+        col1, col2, col3 = st.columns(3)
+        col1.metric("Mean", round(mean, 2))
+        col2.metric("Median", round(median, 2))
+        col3.metric("Std Dev", round(std, 2))
+
+        # -------------------- GRAPH EXPLANATION --------------------
+        st.subheader("🧾 Graph Explanation")
+
+        if graph_type == "Line Chart":
+            st.write("This graph shows trends over continuous data.")
         else:
-            st.error("No numeric columns found")
+            st.write("This graph compares discrete values.")
 
-    # -------------------- AI INSIGHTS MODE --------------------
-    elif mode == "🧠 AI Insights":
+        # -------------------- INSIGHTS --------------------
+        st.subheader("🧠 Insights")
 
-        st.subheader("🤖 Smart Insights")
-
-        numeric_cols = df.select_dtypes(include=np.number).columns.tolist()
-
-        if numeric_cols:
-            insights = []
-
-            for col in numeric_cols:
-                mean = df[col].mean()
-                median = df[col].median()
-                max_val = df[col].max()
-                min_val = df[col].min()
-
-                # Insight 1: skewness
-                if mean > median:
-                    insights.append(f"📌 '{col}' is right-skewed (higher values dominate)")
-                else:
-                    insights.append(f"📌 '{col}' is left-skewed (lower values dominate)")
-
-                # Insight 2: outlier detection
-                if max_val > mean * 2:
-                    insights.append(f"⚠️ '{col}' may contain outliers")
-
-                # Insight 3: range analysis
-                if max_val - min_val > mean:
-                    insights.append(f"📊 '{col}' has high variation")
-
-            # Display insights
-            for i in insights:
-                st.write(i)
-
-            # -------------------- SUGGESTIONS --------------------
-            st.subheader("💡 AI Suggestions")
-
-            st.write("• Consider removing outliers for better accuracy")
-            st.write("• Normalize data if variation is high")
-            st.write("• Use visualization to detect trends")
-            st.write("• Focus on columns with high impact")
-
+        if mean > median:
+            st.info("Data is right-skewed (higher values dominate)")
         else:
-            st.error("No numeric data available for AI analysis")
+            st.info("Data is left-skewed (lower values dominate)")
+
+        # -------------------- PROBLEM PREDICTION --------------------
+        st.subheader("⚠️ Problem Prediction")
+
+        if df[col].max() > mean * 2:
+            st.error("Possible outliers detected → may affect analysis")
+
+        if std > mean:
+            st.warning("High variance → unstable data")
+
+        # -------------------- SUGGESTIONS --------------------
+        st.subheader("💡 Suggestions")
+
+        st.write("• Consider removing outliers")
+        st.write("• Normalize data for better comparison")
+        st.write("• Use smoothing techniques for trends")
+
+        # -------------------- ALTERNATIVE APPROACH --------------------
+        st.subheader("🔄 Alternative Approach")
+
+        st.write("• Try using moving average for better trend analysis")
+        st.write("• Use histogram for distribution understanding")
+        st.write("• Apply ML models for prediction")
+
+        # -------------------- GRAPHICAL vs STATISTICAL --------------------
+        st.subheader("📊 Graphical vs Statistical")
+
+        st.write("Graphical: Visual trends using charts")
+        st.write("Statistical: Mean, median, variance analysis")
+
+        # -------------------- AUTOMATION --------------------
+        st.subheader("⚡ Automation")
+
+        st.success("All steps are automated: input → processing → analysis → insights → suggestions")
+
+    else:
+        st.error("❌ No numeric data found")
 
 else:
-    st.info("Please upload a CSV file to begin")
+    st.info("Upload a CSV file to begin")
