@@ -1,59 +1,100 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import time
+import time   # ✅ used instead of streamlit_autorefresh
 
 # -------------------- PAGE CONFIG --------------------
 st.set_page_config(page_title="Advanced Live Dashboard", layout="wide")
 
+# -------------------- AUTO REFRESH (NO ERROR VERSION) --------------------
+time.sleep(1)
+st.rerun()
+
+# -------------------- CUSTOM CSS --------------------
+st.markdown("""
+<style>
+body {
+    background-color: #0e1117;
+}
+.metric-card {
+    background-color: #1c1f26;
+    padding: 20px;
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: 0px 0px 15px rgba(0,255,204,0.2);
+    transition: 0.3s;
+}
+.metric-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0px 0px 25px rgba(0,255,204,0.6);
+}
+.metric-title {
+    font-size: 18px;
+    color: #aaa;
+}
+.metric-value {
+    font-size: 35px;
+    font-weight: bold;
+}
+</style>
+""", unsafe_allow_html=True)
+
 # -------------------- TITLE --------------------
-st.title("📊 Advanced LIVE Dashboard")
+st.markdown(
+    "<h1 style='text-align:center; color:#00ffcc;'>⚡ Live System Dashboard</h1>",
+    unsafe_allow_html=True
+)
 
-# -------------------- SIDEBAR --------------------
-st.sidebar.header("Settings")
+# -------------------- SESSION STATE --------------------
+if "data" not in st.session_state or not isinstance(st.session_state.data, list):
+    st.session_state.data = np.random.randint(50, 100, 20).tolist()
 
-num_rows = st.sidebar.slider("Select number of rows", 10, 200, 50)
-show_data = st.sidebar.checkbox("Show Raw Data")
+# -------------------- GENERATE NEW VALUE --------------------
+new_value = np.random.randint(50, 100)
 
-# -------------------- AUTO REFRESH --------------------
-REFRESH_INTERVAL = 2  # seconds
+# SAFE UPDATE (NO CRASH)
+if len(st.session_state.data) >= 20:
+    st.session_state.data.pop(0)
 
-# -------------------- GENERATE DATA --------------------
-@st.cache_data(ttl=2)
-def generate_data(n):
-    df = pd.DataFrame({
-        "Time": pd.date_range(end=pd.Timestamp.now(), periods=n, freq="s"),
-        "Sales": np.random.randint(50, 200, n),
-        "Profit": np.random.randint(10, 100, n),
-        "Users": np.random.randint(100, 1000, n)
-    })
-    return df
+st.session_state.data.append(new_value)
 
-data = generate_data(num_rows)
-
-# -------------------- METRICS --------------------
+# -------------------- METRICS (RIBBON STYLE) --------------------
 col1, col2, col3 = st.columns(3)
 
-col1.metric("Total Sales", int(data["Sales"].sum()))
-col2.metric("Total Profit", int(data["Profit"].sum()))
-col3.metric("Active Users", int(data["Users"].mean()))
-
-# -------------------- CHARTS --------------------
-st.subheader("📈 Live Trends")
-
-col1, col2 = st.columns(2)
+def metric_card(title, value, color):
+    st.markdown(f"""
+    <div class="metric-card">
+        <div class="metric-title">{title}</div>
+        <div class="metric-value" style="color:{color}">{value}</div>
+    </div>
+    """, unsafe_allow_html=True)
 
 with col1:
-    st.line_chart(data.set_index("Time")[["Sales", "Profit"]])
+    metric_card("Load", new_value, "#00ffcc")
 
 with col2:
-    st.bar_chart(data.set_index("Time")[["Users"]])
+    metric_card("Temperature (°C)", np.random.randint(20, 40), "#ffcc00")
 
-# -------------------- DATA TABLE --------------------
-if show_data:
-    st.subheader("📄 Raw Data")
-    st.dataframe(data, use_container_width=True)
+with col3:
+    metric_card("Pressure", np.random.randint(70, 120), "#ff4d4d")
 
-# -------------------- AUTO REFRESH --------------------
-time.sleep(REFRESH_INTERVAL)
-st.rerun()
+st.markdown("---")
+
+# -------------------- GRAPH (FIXED WINDOW, NO SCROLL) --------------------
+chart_placeholder = st.empty()
+
+df = pd.DataFrame({
+    "Time": list(range(len(st.session_state.data))),
+    "Load": st.session_state.data
+})
+
+with chart_placeholder:
+    st.line_chart(df.set_index("Time"))
+
+# -------------------- STATUS --------------------
+if new_value > 90:
+    st.error("🔴 Critical Condition")
+elif new_value > 75:
+    st.warning("🟡 High Load")
+else:
+    st.success("🟢 System Stable")
