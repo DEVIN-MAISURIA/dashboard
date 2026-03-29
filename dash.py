@@ -7,25 +7,47 @@ st.set_page_config(page_title="LLM Data Analyzer", layout="wide")
 st.markdown("""
 <style>
 .stApp {
-    background: linear-gradient(135deg, #0a0f1c, #111827);
-    color: #e5e7eb;
+    background: linear-gradient(135deg, #0f0c29, #1a1a40);
+    color: #f8fafc;
 }
+
+/* Titles */
 h1, h2, h3 {
-    color: #22d3ee;
+    color: #facc15; /* gold */
 }
+
+/* Metric Cards */
 .metric-card {
-    background: linear-gradient(145deg, #111827, #1f2937);
+    background: linear-gradient(145deg, #1a1a40, #2a2a72);
     padding: 20px;
     border-radius: 14px;
     text-align: center;
-    border: 1px solid rgba(34, 211, 238, 0.3);
-    box-shadow: 0 0 15px rgba(34, 211, 238, 0.15);
+    border: 1px solid rgba(250, 204, 21, 0.3);
+    box-shadow: 0 0 15px rgba(250, 204, 21, 0.2);
+    transition: 0.3s;
 }
 .metric-card:hover {
     transform: translateY(-5px);
+    box-shadow: 0 0 25px rgba(250, 204, 21, 0.4);
 }
+
+/* Sidebar */
 section[data-testid="stSidebar"] {
-    background: linear-gradient(180deg, #020617, #0f172a);
+    background: linear-gradient(180deg, #020617, #1a1a40);
+}
+
+/* Buttons */
+.stButton>button {
+    background: linear-gradient(90deg, #facc15, #9333ea);
+    color: black;
+    border-radius: 8px;
+    border: none;
+    font-weight: 600;
+}
+
+/* Alerts */
+.stAlert {
+    border-left: 4px solid #facc15;
 }
 </style>
 """, unsafe_allow_html=True)
