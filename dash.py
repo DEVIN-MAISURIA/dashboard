@@ -1,14 +1,13 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import time   # ✅ used instead of streamlit_autorefresh
+from streamlit_autorefresh import st_autorefresh  # ✅ best method
 
 # -------------------- PAGE CONFIG --------------------
 st.set_page_config(page_title="Advanced Live Dashboard", layout="wide")
 
-# -------------------- AUTO REFRESH (NO ERROR VERSION) --------------------
-time.sleep(1)
-st.rerun()
+# -------------------- AUTO REFRESH (LIGHT) --------------------
+st_autorefresh(interval=2000, key="live")   # 2 sec → less load
 
 # -------------------- CUSTOM CSS --------------------
 st.markdown("""
@@ -18,47 +17,38 @@ body {
 }
 .metric-card {
     background-color: #1c1f26;
-    padding: 20px;
+    padding: 18px;
     border-radius: 15px;
     text-align: center;
-    box-shadow: 0px 0px 15px rgba(0,255,204,0.2);
-    transition: 0.3s;
-}
-.metric-card:hover {
-    transform: scale(1.05);
-    box-shadow: 0px 0px 25px rgba(0,255,204,0.6);
+    box-shadow: 0px 0px 10px rgba(0,255,204,0.2);
 }
 .metric-title {
-    font-size: 18px;
+    font-size: 16px;
     color: #aaa;
 }
 .metric-value {
-    font-size: 35px;
+    font-size: 30px;
     font-weight: bold;
 }
 </style>
 """, unsafe_allow_html=True)
 
 # -------------------- TITLE --------------------
-st.markdown(
-    "<h1 style='text-align:center; color:#00ffcc;'>⚡ Live System Dashboard</h1>",
-    unsafe_allow_html=True
-)
+st.markdown("<h1 style='text-align:center; color:#00ffcc;'>⚡ Live System Dashboard</h1>", unsafe_allow_html=True)
 
 # -------------------- SESSION STATE --------------------
-if "data" not in st.session_state or not isinstance(st.session_state.data, list):
+if "data" not in st.session_state:
     st.session_state.data = np.random.randint(50, 100, 20).tolist()
 
-# -------------------- GENERATE NEW VALUE --------------------
+# -------------------- DATA UPDATE (OPTIMIZED) --------------------
 new_value = np.random.randint(50, 100)
 
-# SAFE UPDATE (NO CRASH)
 if len(st.session_state.data) >= 20:
-    st.session_state.data.pop(0)
+    st.session_state.data = st.session_state.data[1:]  # faster than pop
 
 st.session_state.data.append(new_value)
 
-# -------------------- METRICS (RIBBON STYLE) --------------------
+# -------------------- METRICS --------------------
 col1, col2, col3 = st.columns(3)
 
 def metric_card(title, value, color):
@@ -80,16 +70,13 @@ with col3:
 
 st.markdown("---")
 
-# -------------------- GRAPH (FIXED WINDOW, NO SCROLL) --------------------
-chart_placeholder = st.empty()
-
+# -------------------- GRAPH (LIGHT RENDER) --------------------
 df = pd.DataFrame({
-    "Time": list(range(len(st.session_state.data))),
+    "Time": range(len(st.session_state.data)),
     "Load": st.session_state.data
 })
 
-with chart_placeholder:
-    st.line_chart(df.set_index("Time"))
+st.line_chart(df.set_index("Time"), height=300)
 
 # -------------------- STATUS --------------------
 if new_value > 90:
