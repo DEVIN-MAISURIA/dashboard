@@ -5,7 +5,55 @@ import numpy as np
 # -------------------- CONFIG --------------------
 st.set_page_config(page_title="LLM Data Analyzer", layout="wide")
 
-st.title("🤖 Intelligent CSV Analyzer (LLM Style)")
+# -------------------- PROFESSIONAL CSS --------------------
+st.markdown("""
+<style>
+/* Main background */
+.stApp {
+    background-color: #0f172a;
+    color: #e2e8f0;
+}
+
+/* Titles */
+h1, h2, h3 {
+    color: #f8fafc;
+}
+
+/* Card style */
+.block-container {
+    padding-top: 2rem;
+}
+
+/* Metric cards */
+.metric-card {
+    background: #1e293b;
+    padding: 20px;
+    border-radius: 12px;
+    text-align: center;
+    border: 1px solid #334155;
+}
+
+/* Buttons */
+.stButton>button {
+    background-color: #2563eb;
+    color: white;
+    border-radius: 8px;
+}
+
+/* Sidebar */
+section[data-testid="stSidebar"] {
+    background-color: #020617;
+}
+
+/* Success / Info colors */
+.stAlert {
+    border-radius: 10px;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# -------------------- TITLE --------------------
+st.markdown("<h1 style='text-align:center;'>🤖 Intelligent CSV Analyzer</h1>", unsafe_allow_html=True)
 
 # -------------------- INPUT --------------------
 file = st.file_uploader("Upload CSV File", type=["csv"])
@@ -47,7 +95,7 @@ if file is not None:
             graph_type = "Line Chart"
             st.line_chart(df[col])
 
-        st.write(f"✅ Selected Graph: **{graph_type}** (based on data distribution)")
+        st.info(f"Selected Graph: {graph_type}")
 
         # -------------------- STATISTICS --------------------
         st.subheader("📈 Statistical Analysis")
@@ -56,10 +104,14 @@ if file is not None:
         median = df[col].median()
         std = df[col].std()
 
-        col1, col2, col3 = st.columns(3)
-        col1.metric("Mean", round(mean, 2))
-        col2.metric("Median", round(median, 2))
-        col3.metric("Std Dev", round(std, 2))
+        c1, c2, c3 = st.columns(3)
+
+        with c1:
+            st.markdown(f"<div class='metric-card'><h3>Mean</h3><h2>{round(mean,2)}</h2></div>", unsafe_allow_html=True)
+        with c2:
+            st.markdown(f"<div class='metric-card'><h3>Median</h3><h2>{round(median,2)}</h2></div>", unsafe_allow_html=True)
+        with c3:
+            st.markdown(f"<div class='metric-card'><h3>Std Dev</h3><h2>{round(std,2)}</h2></div>", unsafe_allow_html=True)
 
         # -------------------- GRAPH EXPLANATION --------------------
         st.subheader("🧾 Graph Explanation")
@@ -109,7 +161,7 @@ if file is not None:
         # -------------------- AUTOMATION --------------------
         st.subheader("⚡ Automation")
 
-        st.success("All steps are automated: input → processing → analysis → insights → suggestions")
+        st.success("Pipeline fully automated: input → analysis → insights → recommendations")
 
     else:
         st.error("❌ No numeric data found")
