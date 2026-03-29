@@ -1,91 +1,58 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import time
 
 # -------------------- PAGE CONFIG --------------------
-st.set_page_config(page_title="Advanced Live Dashboard", layout="wide")
+st.set_page_config(page_title="CSV Live Dashboard", layout="wide")
 
-# -------------------- AUTO REFRESH (NO EXTRA LIBRARY) --------------------
-REFRESH_INTERVAL = 2  # seconds
+st.title("📊 CSV Live Dashboard with Insights")
 
-# -------------------- CUSTOM CSS --------------------
-st.markdown("""
-<style>
-body {
-    background-color: #0e1117;
-}
-.metric-card {
-    background-color: #1c1f26;
-    padding: 18px;
-    border-radius: 15px;
-    text-align: center;
-    box-shadow: 0px 0px 10px rgba(0,255,204,0.2);
-}
-.metric-title {
-    font-size: 16px;
-    color: #aaa;
-}
-.metric-value {
-    font-size: 30px;
-    font-weight: bold;
-}
-</style>
-""", unsafe_allow_html=True)
+# -------------------- FILE UPLOAD --------------------
+file = st.file_uploader("Upload your CSV file", type=["csv"])
 
-# -------------------- TITLE --------------------
-st.markdown("<h1 style='text-align:center; color:#00ffcc;'>⚡ Live System Dashboard</h1>", unsafe_allow_html=True)
+if file is not None:
+    df = pd.read_csv(file)
 
-# -------------------- SESSION STATE --------------------
-if "data" not in st.session_state:
-    st.session_state.data = np.random.randint(50, 100, 20).tolist()
+    st.success("File uploaded successfully!")
 
-# -------------------- DATA UPDATE --------------------
-new_value = np.random.randint(50, 100)
+    # -------------------- SHOW DATA --------------------
+    st.subheader("📄 Data Preview")
+    st.dataframe(df, use_container_width=True)
 
-if len(st.session_state.data) >= 20:
-    st.session_state.data = st.session_state.data[1:]
+    # -------------------- BASIC INFO --------------------
+    st.subheader("📊 Summary Statistics")
+    st.write(df.describe())
 
-st.session_state.data.append(new_value)
+    # -------------------- COLUMN SELECTION --------------------
+    numeric_cols = df.select_dtypes(include=np.number).columns.tolist()
 
-# -------------------- METRICS --------------------
-col1, col2, col3 = st.columns(3)
+    if numeric_cols:
+        col = st.selectbox("Select column for analysis", numeric_cols)
 
-def metric_card(title, value, color):
-    st.markdown(f"""
-    <div class="metric-card">
-        <div class="metric-title">{title}</div>
-        <div class="metric-value" style="color:{color}">{value}</div>
-    </div>
-    """, unsafe_allow_html=True)
+        # -------------------- METRICS --------------------
+        col1, col2, col3 = st.columns(3)
 
-with col1:
-    metric_card("Load", new_value, "#00ffcc")
+        col1.metric("Mean", round(df[col].mean(), 2))
+        col2.metric("Max", df[col].max())
+        col3.metric("Min", df[col].min())
 
-with col2:
-    metric_card("Temperature (°C)", np.random.randint(20, 40), "#ffcc00")
+        # -------------------- CHART --------------------
+        st.subheader("📈 Visualization")
+        st.line_chart(df[col])
 
-with col3:
-    metric_card("Pressure", np.random.randint(70, 120), "#ff4d4d")
+        # -------------------- SIMPLE INSIGHTS --------------------
+        st.subheader("🧠 Insights")
 
-st.markdown("---")
+        if df[col].mean() > df[col].median():
+            st.info("Data is slightly right-skewed (higher values dominate)")
+        else:
+            st.info("Data is slightly left-skewed (lower values dominate)")
 
-# -------------------- GRAPH --------------------
-df = pd.DataFrame({
-    "Time": range(len(st.session_state.data)),
-    "Load": st.session_state.data
-})
+        if df[col].max() > df[col].mean() * 2:
+            st.warning("Possible outliers detected")
 
-st.line_chart(df.set_index("Time"), height=300)
+    else:
+        st.error("No numeric columns found in the dataset")
 
-# -------------------- STATUS --------------------
-if new_value > 90:
-    st.error("🔴 Critical Condition")
-elif new_value > 75:
-    st.warning("🟡 High Load")
 else:
-    st.success("🟢 System Stable")
-
-# -------------------- AUTO REFRESH --------------------
-time.sleep(REFRESH_INTERVAL)
-st.rerun()
+    st.info("Please upload a CSV file to start")
