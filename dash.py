@@ -55,20 +55,26 @@ if file is not None:
     if numeric_cols:
         col = st.selectbox("Select Column", numeric_cols)
 
-        # -------------------- FILTER ADDED --------------------
+        # -------------------- FIXED FILTER (NO ERROR) --------------------
         st.subheader("🎛️ Filter Data")
 
-        min_val = int(df[col].min())
-        max_val = int(df[col].max())
+        clean_col = df[col].dropna()
 
-        selected_range = st.slider(
-            f"Select range for {col}",
-            min_val,
-            max_val,
-            (min_val, max_val)
-        )
+        min_val = float(clean_col.min())
+        max_val = float(clean_col.max())
 
-        filtered_df = df[(df[col] >= selected_range[0]) & (df[col] <= selected_range[1])]
+        if min_val == max_val:
+            st.warning("⚠️ Cannot apply filter (all values are same)")
+            filtered_df = df.copy()
+        else:
+            selected_range = st.slider(
+                f"Select range for {col}",
+                min_value=min_val,
+                max_value=max_val,
+                value=(min_val, max_val)
+            )
+
+            filtered_df = df[(df[col] >= selected_range[0]) & (df[col] <= selected_range[1])]
 
         st.write(f"Filtered Data Count: {len(filtered_df)}")
 
