@@ -8,23 +8,8 @@ st.set_page_config(page_title="LLM Data Analyzer", layout="wide")
 # -------------------- PROFESSIONAL CSS --------------------
 st.markdown("""
 <style>
-/* Main background */
-.stApp {
-    background-color: #0f172a;
-    color: #e2e8f0;
-}
-
-/* Titles */
-h1, h2, h3 {
-    color: #f8fafc;
-}
-
-/* Card style */
-.block-container {
-    padding-top: 2rem;
-}
-
-/* Metric cards */
+.stApp { background-color: #0f172a; color: #e2e8f0; }
+h1, h2, h3 { color: #f8fafc; }
 .metric-card {
     background: #1e293b;
     padding: 20px;
@@ -32,22 +17,8 @@ h1, h2, h3 {
     text-align: center;
     border: 1px solid #334155;
 }
-
-/* Buttons */
-.stButton>button {
-    background-color: #2563eb;
-    color: white;
-    border-radius: 8px;
-}
-
-/* Sidebar */
 section[data-testid="stSidebar"] {
     background-color: #020617;
-}
-
-/* Success / Info colors */
-.stAlert {
-    border-radius: 10px;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -60,42 +31,43 @@ file = st.file_uploader("Upload CSV File", type=["csv"])
 
 if file is not None:
     df = pd.read_csv(file)
-
     st.success("✅ File Uploaded Successfully")
 
-    # -------------------- INPUT TYPE --------------------
-    st.subheader("📥 Input Type")
-    st.write("Structured CSV Data")
-
-    # -------------------- PROCESSING --------------------
-    st.subheader("⚙️ Data Processing")
-    st.write("• Handling numeric columns")
-    st.write("• Statistical computation")
-    st.write("• Pattern detection")
-
+    # -------------------- BASIC PROCESSING --------------------
     numeric_cols = df.select_dtypes(include=np.number).columns.tolist()
 
     if numeric_cols:
 
-        # -------------------- OUTPUT TYPE --------------------
-        st.subheader("📤 Output Type")
-        st.write("Interactive Dashboard + AI Insights")
+        st.subheader("📊 Graph Control Panel")
 
-        # -------------------- GRAPH SELECTION --------------------
-        st.subheader("📊 Graph Selection Logic")
+        col = st.selectbox("Select Column", numeric_cols)
 
-        col = st.selectbox("Select column for analysis", numeric_cols)
+        graph_type = st.selectbox(
+            "Select Graph Type",
+            ["Line Chart", "Bar Chart", "Area Chart"]
+        )
 
-        unique_vals = df[col].nunique()
+        show_trend = st.checkbox("Show Trend Line (Moving Average)")
 
-        if unique_vals < 10:
-            graph_type = "Bar Chart"
-            st.bar_chart(df[col])
-        else:
-            graph_type = "Line Chart"
-            st.line_chart(df[col])
+        # -------------------- TREND LINE --------------------
+        df["Trend"] = df[col].rolling(window=5).mean()
 
-        st.info(f"Selected Graph: {graph_type}")
+        # -------------------- GRAPH --------------------
+        st.subheader("📈 Visualization")
+
+        chart_data = df[[col]].copy()
+
+        if show_trend:
+            chart_data["Trend"] = df["Trend"]
+
+        if graph_type == "Line Chart":
+            st.line_chart(chart_data)
+
+        elif graph_type == "Bar Chart":
+            st.bar_chart(chart_data)
+
+        elif graph_type == "Area Chart":
+            st.area_chart(chart_data)
 
         # -------------------- STATISTICS --------------------
         st.subheader("📈 Statistical Analysis")
@@ -103,8 +75,9 @@ if file is not None:
         mean = df[col].mean()
         median = df[col].median()
         std = df[col].std()
+        skew = df[col].skew()
 
-        c1, c2, c3 = st.columns(3)
+        c1, c2, c3, c4 = st.columns(4)
 
         with c1:
             st.markdown(f"<div class='metric-card'><h3>Mean</h3><h2>{round(mean,2)}</h2></div>", unsafe_allow_html=True)
@@ -112,56 +85,54 @@ if file is not None:
             st.markdown(f"<div class='metric-card'><h3>Median</h3><h2>{round(median,2)}</h2></div>", unsafe_allow_html=True)
         with c3:
             st.markdown(f"<div class='metric-card'><h3>Std Dev</h3><h2>{round(std,2)}</h2></div>", unsafe_allow_html=True)
+        with c4:
+            st.markdown(f"<div class='metric-card'><h3>Skewness</h3><h2>{round(skew,2)}</h2></div>", unsafe_allow_html=True)
 
-        # -------------------- GRAPH EXPLANATION --------------------
-        st.subheader("🧾 Graph Explanation")
+        # -------------------- TECHNICAL INSIGHTS --------------------
+        st.subheader("🧠 Technical Insights")
 
-        if graph_type == "Line Chart":
-            st.write("This graph shows trends over continuous data.")
+        # Skewness insight
+        if skew > 0:
+            st.info("Positive skew detected → higher value concentration on right tail")
+        elif skew < 0:
+            st.info("Negative skew detected → lower value concentration on left tail")
         else:
-            st.write("This graph compares discrete values.")
+            st.info("Data is approximately symmetric")
 
-        # -------------------- INSIGHTS --------------------
-        st.subheader("🧠 Insights")
-
-        if mean > median:
-            st.info("Data is right-skewed (higher values dominate)")
-        else:
-            st.info("Data is left-skewed (lower values dominate)")
-
-        # -------------------- PROBLEM PREDICTION --------------------
-        st.subheader("⚠️ Problem Prediction")
-
-        if df[col].max() > mean * 2:
-            st.error("Possible outliers detected → may affect analysis")
-
+        # Variance insight
         if std > mean:
-            st.warning("High variance → unstable data")
+            st.warning("High variance → data is highly dispersed and unstable")
+
+        # Trend insight
+        if show_trend:
+            if df["Trend"].iloc[-1] > df["Trend"].iloc[0]:
+                st.success("Upward trend detected over time")
+            else:
+                st.error("Downward trend detected")
+
+        # Outlier detection
+        if df[col].max() > mean * 2:
+            st.error("Outliers detected → may distort analysis")
+
+        # -------------------- LOGICAL INSIGHTS --------------------
+        st.subheader("🔍 Logical Insights")
+
+        st.write("• Compare mean and median to understand distribution")
+        st.write("• Use trend line to smooth fluctuations")
+        st.write("• High std deviation indicates inconsistent behavior")
 
         # -------------------- SUGGESTIONS --------------------
-        st.subheader("💡 Suggestions")
+        st.subheader("💡 Recommendations")
 
-        st.write("• Consider removing outliers")
-        st.write("• Normalize data for better comparison")
-        st.write("• Use smoothing techniques for trends")
-
-        # -------------------- ALTERNATIVE APPROACH --------------------
-        st.subheader("🔄 Alternative Approach")
-
-        st.write("• Try using moving average for better trend analysis")
-        st.write("• Use histogram for distribution understanding")
-        st.write("• Apply ML models for prediction")
-
-        # -------------------- GRAPHICAL vs STATISTICAL --------------------
-        st.subheader("📊 Graphical vs Statistical")
-
-        st.write("Graphical: Visual trends using charts")
-        st.write("Statistical: Mean, median, variance analysis")
+        st.write("• Apply normalization if variance is high")
+        st.write("• Remove outliers for better model accuracy")
+        st.write("• Use moving average for better trend clarity")
+        st.write("• Consider ML models for predictive analysis")
 
         # -------------------- AUTOMATION --------------------
         st.subheader("⚡ Automation")
 
-        st.success("Pipeline fully automated: input → analysis → insights → recommendations")
+        st.success("Fully automated pipeline: Input → Analysis → Visualization → Insights → Recommendations")
 
     else:
         st.error("❌ No numeric data found")
