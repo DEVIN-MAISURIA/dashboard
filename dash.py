@@ -7,47 +7,78 @@ st.set_page_config(page_title="LLM Data Analyzer", layout="wide")
 # -------------------- LOGO --------------------
 st.image("logo.png", width=120)
 
-# -------------------- GAUGE THEME CSS --------------------
+# -------------------- FINAL UI CSS (BOLD + HIGH VISIBILITY + GAUGE THEME) --------------------
 st.markdown("""
 <style>
+
+/* MAIN BACKGROUND */
 .stApp {
-    background: #1f2933;
-    color: #f9fafb;
+    background: #111827;
+    color: #ffffff;
+    font-weight: bold;
 }
 
-/* Titles */
+/* FORCE ALL TEXT VISIBLE */
+html, body, [class*="css"] {
+    color: #ffffff !important;
+    font-weight: 700 !important;
+}
+
+/* HEADINGS */
 h1, h2, h3 {
-    color: #facc15;
+    color: #facc15 !important;
+    font-weight: 900 !important;
 }
 
-/* Metric Cards */
+/* LABELS */
+label {
+    color: #ffffff !important;
+    font-weight: bold !important;
+}
+
+/* METRIC CARDS */
 .metric-card {
-    background: #323f4b;
+    background: #1f2937;
     padding: 20px;
     border-radius: 14px;
     text-align: center;
-    border: 1px solid #52606d;
-    box-shadow: 0 0 10px rgba(0,0,0,0.4);
+    border: 2px solid #facc15;
+    color: #ffffff;
+    font-weight: bold;
 }
 
-/* Sidebar */
+/* SIDEBAR */
 section[data-testid="stSidebar"] {
-    background-color: #111827;
+    background-color: #020617;
+    color: white;
 }
 
-/* Buttons */
+/* BUTTON */
 .stButton>button {
     background: linear-gradient(90deg, #16a34a, #facc15, #ef4444);
     color: black;
+    font-weight: 900;
     border-radius: 8px;
-    border: none;
-    font-weight: 600;
 }
 
-/* Alerts */
+/* ALERTS */
 .stAlert {
-    border-left: 5px solid #16a34a;
+    font-weight: bold;
+    border-left: 5px solid #facc15;
 }
+
+/* FILE UPLOADER */
+.stFileUploader {
+    color: white !important;
+    font-weight: bold !important;
+}
+
+/* SLIDER */
+.stSlider {
+    color: white !important;
+    font-weight: bold !important;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -90,12 +121,14 @@ if file is not None:
 
         if filtered_df[col].nunique() < 10:
             recommended_graph = "Bar Chart"
-        elif "year" in col.lower():
+        elif "year" in col.lower() or "date" in col.lower() or "time" in col.lower():
             recommended_graph = "Line Chart"
-        elif any(k in col.lower() for k in ["mrp", "price"]):
+        elif any(k in col.lower() for k in ["mrp", "price", "cost", "category"]):
             recommended_graph = "Bar Chart"
+        else:
+            recommended_graph = "Line Chart"
 
-        st.info(f"Recommended Graph: {recommended_graph}")
+        st.info(f"Recommended Graph for '{col}' is: {recommended_graph}")
 
         graph_type = st.selectbox(
             "Graph Type",
