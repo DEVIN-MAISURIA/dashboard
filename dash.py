@@ -1,13 +1,13 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-from streamlit_autorefresh import st_autorefresh  # ✅ best method
+import time
 
 # -------------------- PAGE CONFIG --------------------
 st.set_page_config(page_title="Advanced Live Dashboard", layout="wide")
 
-# -------------------- AUTO REFRESH (LIGHT) --------------------
-st_autorefresh(interval=2000, key="live")   # 2 sec → less load
+# -------------------- AUTO REFRESH (NO EXTRA LIBRARY) --------------------
+REFRESH_INTERVAL = 2  # seconds
 
 # -------------------- CUSTOM CSS --------------------
 st.markdown("""
@@ -40,11 +40,11 @@ st.markdown("<h1 style='text-align:center; color:#00ffcc;'>⚡ Live System Dashb
 if "data" not in st.session_state:
     st.session_state.data = np.random.randint(50, 100, 20).tolist()
 
-# -------------------- DATA UPDATE (OPTIMIZED) --------------------
+# -------------------- DATA UPDATE --------------------
 new_value = np.random.randint(50, 100)
 
 if len(st.session_state.data) >= 20:
-    st.session_state.data = st.session_state.data[1:]  # faster than pop
+    st.session_state.data = st.session_state.data[1:]
 
 st.session_state.data.append(new_value)
 
@@ -70,7 +70,7 @@ with col3:
 
 st.markdown("---")
 
-# -------------------- GRAPH (LIGHT RENDER) --------------------
+# -------------------- GRAPH --------------------
 df = pd.DataFrame({
     "Time": range(len(st.session_state.data)),
     "Load": st.session_state.data
@@ -85,3 +85,7 @@ elif new_value > 75:
     st.warning("🟡 High Load")
 else:
     st.success("🟢 System Stable")
+
+# -------------------- AUTO REFRESH --------------------
+time.sleep(REFRESH_INTERVAL)
+st.rerun()
