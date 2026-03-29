@@ -10,13 +10,9 @@ st.markdown("""
     background: linear-gradient(135deg, #0f0c29, #1a1a40);
     color: #f8fafc;
 }
-
-/* Titles */
 h1, h2, h3 {
-    color: #facc15; /* gold */
+    color: #facc15;
 }
-
-/* Metric Cards */
 .metric-card {
     background: linear-gradient(145deg, #1a1a40, #2a2a72);
     padding: 20px;
@@ -30,13 +26,9 @@ h1, h2, h3 {
     transform: translateY(-5px);
     box-shadow: 0 0 25px rgba(250, 204, 21, 0.4);
 }
-
-/* Sidebar */
 section[data-testid="stSidebar"] {
     background: linear-gradient(180deg, #020617, #1a1a40);
 }
-
-/* Buttons */
 .stButton>button {
     background: linear-gradient(90deg, #facc15, #9333ea);
     color: black;
@@ -44,8 +36,6 @@ section[data-testid="stSidebar"] {
     border: none;
     font-weight: 600;
 }
-
-/* Alerts */
 .stAlert {
     border-left: 4px solid #facc15;
 }
@@ -64,7 +54,27 @@ if file is not None:
 
     if numeric_cols:
         col = st.selectbox("Select Column", numeric_cols)
-        graph_type = st.selectbox("Graph Type", ["Line Chart", "Bar Chart", "Area Chart"])
+
+        # -------------------- GRAPH RECOMMENDATION --------------------
+        recommended_graph = "Line Chart"
+
+        if df[col].nunique() < 10:
+            recommended_graph = "Bar Chart"
+        elif "year" in col.lower() or "date" in col.lower() or "time" in col.lower():
+            recommended_graph = "Line Chart"
+        elif any(k in col.lower() for k in ["mrp", "price", "cost", "category"]):
+            recommended_graph = "Bar Chart"
+        else:
+            recommended_graph = "Line Chart"
+
+        st.info(f"Recommended Graph for '{col}' is: {recommended_graph}")
+
+        graph_type = st.selectbox(
+            "Graph Type",
+            ["Line Chart", "Bar Chart", "Area Chart"],
+            index=["Line Chart", "Bar Chart", "Area Chart"].index(recommended_graph)
+        )
+
         show_trend = st.checkbox("Show Trend Line")
 
         df["Trend"] = df[col].rolling(5).mean()
