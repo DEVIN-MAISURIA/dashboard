@@ -3,9 +3,12 @@ import pandas as pd
 import numpy as np
 
 # -------------------- PAGE CONFIG --------------------
-st.set_page_config(page_title="CSV Live Dashboard", layout="wide")
+st.set_page_config(page_title="AI CSV Dashboard", layout="wide")
 
-st.title("📊 CSV Live Dashboard with Insights")
+st.title("🤖 AI-Powered CSV Dashboard")
+
+# -------------------- MODE SELECTION --------------------
+mode = st.sidebar.radio("Select Mode", ["📊 Dashboard", "🧠 AI Insights"])
 
 # -------------------- FILE UPLOAD --------------------
 file = st.file_uploader("Upload your CSV file", type=["csv"])
@@ -15,44 +18,75 @@ if file is not None:
 
     st.success("File uploaded successfully!")
 
-    # -------------------- SHOW DATA --------------------
-    st.subheader("📄 Data Preview")
-    st.dataframe(df, use_container_width=True)
+    # -------------------- DASHBOARD MODE --------------------
+    if mode == "📊 Dashboard":
 
-    # -------------------- BASIC INFO --------------------
-    st.subheader("📊 Summary Statistics")
-    st.write(df.describe())
+        st.subheader("📄 Data Preview")
+        st.dataframe(df, use_container_width=True)
 
-    # -------------------- COLUMN SELECTION --------------------
-    numeric_cols = df.select_dtypes(include=np.number).columns.tolist()
+        st.subheader("📊 Summary Statistics")
+        st.write(df.describe())
 
-    if numeric_cols:
-        col = st.selectbox("Select column for analysis", numeric_cols)
+        numeric_cols = df.select_dtypes(include=np.number).columns.tolist()
 
-        # -------------------- METRICS --------------------
-        col1, col2, col3 = st.columns(3)
+        if numeric_cols:
+            col = st.selectbox("Select column", numeric_cols)
 
-        col1.metric("Mean", round(df[col].mean(), 2))
-        col2.metric("Max", df[col].max())
-        col3.metric("Min", df[col].min())
+            col1, col2, col3 = st.columns(3)
+            col1.metric("Mean", round(df[col].mean(), 2))
+            col2.metric("Max", df[col].max())
+            col3.metric("Min", df[col].min())
 
-        # -------------------- CHART --------------------
-        st.subheader("📈 Visualization")
-        st.line_chart(df[col])
+            st.subheader("📈 Chart")
+            st.line_chart(df[col])
 
-        # -------------------- SIMPLE INSIGHTS --------------------
-        st.subheader("🧠 Insights")
-
-        if df[col].mean() > df[col].median():
-            st.info("Data is slightly right-skewed (higher values dominate)")
         else:
-            st.info("Data is slightly left-skewed (lower values dominate)")
+            st.error("No numeric columns found")
 
-        if df[col].max() > df[col].mean() * 2:
-            st.warning("Possible outliers detected")
+    # -------------------- AI INSIGHTS MODE --------------------
+    elif mode == "🧠 AI Insights":
 
-    else:
-        st.error("No numeric columns found in the dataset")
+        st.subheader("🤖 Smart Insights")
+
+        numeric_cols = df.select_dtypes(include=np.number).columns.tolist()
+
+        if numeric_cols:
+            insights = []
+
+            for col in numeric_cols:
+                mean = df[col].mean()
+                median = df[col].median()
+                max_val = df[col].max()
+                min_val = df[col].min()
+
+                # Insight 1: skewness
+                if mean > median:
+                    insights.append(f"📌 '{col}' is right-skewed (higher values dominate)")
+                else:
+                    insights.append(f"📌 '{col}' is left-skewed (lower values dominate)")
+
+                # Insight 2: outlier detection
+                if max_val > mean * 2:
+                    insights.append(f"⚠️ '{col}' may contain outliers")
+
+                # Insight 3: range analysis
+                if max_val - min_val > mean:
+                    insights.append(f"📊 '{col}' has high variation")
+
+            # Display insights
+            for i in insights:
+                st.write(i)
+
+            # -------------------- SUGGESTIONS --------------------
+            st.subheader("💡 AI Suggestions")
+
+            st.write("• Consider removing outliers for better accuracy")
+            st.write("• Normalize data if variation is high")
+            st.write("• Use visualization to detect trends")
+            st.write("• Focus on columns with high impact")
+
+        else:
+            st.error("No numeric data available for AI analysis")
 
 else:
-    st.info("Please upload a CSV file to start")
+    st.info("Please upload a CSV file to begin")
