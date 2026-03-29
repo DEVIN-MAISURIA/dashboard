@@ -55,10 +55,27 @@ if file is not None:
     if numeric_cols:
         col = st.selectbox("Select Column", numeric_cols)
 
+        # -------------------- FILTER ADDED --------------------
+        st.subheader("🎛️ Filter Data")
+
+        min_val = int(df[col].min())
+        max_val = int(df[col].max())
+
+        selected_range = st.slider(
+            f"Select range for {col}",
+            min_val,
+            max_val,
+            (min_val, max_val)
+        )
+
+        filtered_df = df[(df[col] >= selected_range[0]) & (df[col] <= selected_range[1])]
+
+        st.write(f"Filtered Data Count: {len(filtered_df)}")
+
         # -------------------- GRAPH RECOMMENDATION --------------------
         recommended_graph = "Line Chart"
 
-        if df[col].nunique() < 10:
+        if filtered_df[col].nunique() < 10:
             recommended_graph = "Bar Chart"
         elif "year" in col.lower() or "date" in col.lower() or "time" in col.lower():
             recommended_graph = "Line Chart"
@@ -77,11 +94,11 @@ if file is not None:
 
         show_trend = st.checkbox("Show Trend Line")
 
-        df["Trend"] = df[col].rolling(5).mean()
+        filtered_df["Trend"] = filtered_df[col].rolling(5).mean()
 
-        chart_data = df[[col]].copy()
+        chart_data = filtered_df[[col]].copy()
         if show_trend:
-            chart_data["Trend"] = df["Trend"]
+            chart_data["Trend"] = filtered_df["Trend"]
 
         if graph_type == "Line Chart":
             st.line_chart(chart_data)
@@ -90,10 +107,10 @@ if file is not None:
         else:
             st.area_chart(chart_data)
 
-        mean = df[col].mean()
-        median = df[col].median()
-        std = df[col].std()
-        skew = df[col].skew()
+        mean = filtered_df[col].mean()
+        median = filtered_df[col].median()
+        std = filtered_df[col].std()
+        skew = filtered_df[col].skew()
 
         c1, c2, c3, c4 = st.columns(4)
 
@@ -119,12 +136,12 @@ if file is not None:
             st.warning("High variance → unstable data")
 
         if show_trend:
-            if df["Trend"].iloc[-1] > df["Trend"].iloc[0]:
+            if filtered_df["Trend"].iloc[-1] > filtered_df["Trend"].iloc[0]:
                 st.success("Upward trend detected")
             else:
                 st.error("Downward trend detected")
 
-        if df[col].max() > mean * 2:
+        if filtered_df[col].max() > mean * 2:
             st.error("Outliers detected")
 
         st.subheader("Suggestions")
